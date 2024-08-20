@@ -16,8 +16,8 @@
 import time
 from math import ceil
 
-from sdk_utils import verify_checksum
-from lib.umqtt import MQTTClient, MQTTException
+from lib.tb_upy_sdk.sdk_utils import verify_checksum
+from lib.tb_upy_sdk.umqtt import MQTTClient, MQTTException
 import ujson
 import ubinascii
 import machine
