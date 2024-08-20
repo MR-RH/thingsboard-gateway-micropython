@@ -1,6 +1,6 @@
 import network
 import ujson as json
-from umqtt.simple import MQTTClient
+from lib.tb_device_mqtt import TBDeviceMqttClient
 import _thread
 import time
 from lib.tb_logger import TbLogger
@@ -26,11 +26,9 @@ class TBGatewayService:
         self.logger.info("Connected to WiFi")
 
         # Initialize MQTT client
-        self.tb_client = MQTTClient(self.__config["thingsboard"]["security"]["clientId"],
-                                    self.__config["thingsboard"]["host"],
-                                    port=self.__config["thingsboard"]["port"],
-                                    user=self.__config["thingsboard"]["security"]["username"],
-                                    password=self.__config["thingsboard"]["security"]["password"])
+        self.tb_client = TBDeviceMqttClient(host=self.__config["thingsboard"]["host"],
+                                            port=self.__config["thingsboard"]["port"],
+                                            access_token=self.__config["thingsboard"]["security"]["accessToken"])
         self.logger.info("Initialized tb_client")
 
         # Connect to ThingsBoard

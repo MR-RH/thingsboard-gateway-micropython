@@ -17,7 +17,7 @@ import time
 from math import ceil
 
 from sdk_utils import verify_checksum
-from umqtt import MQTTClient, MQTTException
+from lib.umqtt import MQTTClient, MQTTException
 import ujson
 import ubinascii
 import machine
@@ -111,6 +111,9 @@ class TBDeviceMqttClient:
                 self.__get_firmware()
         else:
             self._on_decode_message(topic, msg)
+
+    def set_callback(self, f):
+        self._callback = f
 
     def _on_decode_message(self, topic, msg):
         if topic.startswith(RPC_REQUEST_TOPIC):

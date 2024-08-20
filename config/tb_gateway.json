@@ -18,10 +18,8 @@
       "checkConnectorsConfigurationInSeconds": 60,
       "handleDeviceRenaming": true,
       "security": {
-			  "type": "usernamePassword",
-			  "clientId": "___clientId___",
-			  "username": "___username___",
-			  "password": "___password___"
+			  "type": "accessToken",
+			  "accessToken": "___access_token___"
 		  },
       "qos": 1,
       "checkingDeviceActivity": {
