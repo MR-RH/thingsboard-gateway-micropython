@@ -1,9 +1,9 @@
 import network
 import ujson as json
-from umqtt.simple import MQTTClient
+from lib.tb_upy_sdk.tb_device_mqtt import TBDeviceMqttClient
 import _thread
 import time
-from tb_logger import TbLogger
+from lib.tb_logger import TbLogger
 
 class TBGatewayService:
     def __init__(self, config_file=None):
@@ -26,11 +26,9 @@ class TBGatewayService:
         self.logger.info("Connected to WiFi")
 
         # Initialize MQTT client
-        self.tb_client = MQTTClient(self.__config["thingsboard"]["security"]["clientId"],
-                                    self.__config["thingsboard"]["host"],
-                                    port=self.__config["thingsboard"]["port"],
-                                    user=self.__config["thingsboard"]["security"]["username"],
-                                    password=self.__config["thingsboard"]["security"]["password"])
+        self.tb_client = TBDeviceMqttClient(host=self.__config["thingsboard"]["host"],
+                                            port=self.__config["thingsboard"]["port"],
+                                            access_token=self.__config["thingsboard"]["security"]["accessToken"])
         self.logger.info("Initialized tb_client")
 
         # Connect to ThingsBoard
@@ -57,10 +55,23 @@ class TBGatewayService:
     def on_message(self, topic, msg):
         self.logger.info(f"Received message: {topic} {msg}")
 
+    def send_telemetry(self, data):
+        self.tb_client.send_telemetry(data)
+        self.logger.info(f"Sent telemetry data: {data}")
+
     def main_loop(self):
         while not self.stopped:
-            # Placeholder for main loop logic
-            time.sleep(1)
+            # Example telemetry data
+            telemetry_data = {
+                "temperature": 27.6,
+                "humidity": 70
+            }
+            self.send_telemetry(telemetry_data)
+            
+            self.logger.info("Waiting for message...")
+            self.tb_client.wait_for_msg()
+            self.logger.info("Message received or timeout occurred")
+            time.sleep(10)  # Send telemetry data every 10 seconds
 
     def stop(self):
         self.stopped = True
