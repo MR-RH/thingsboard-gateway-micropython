@@ -3,7 +3,7 @@ import ujson as json
 from umqtt.simple import MQTTClient
 import _thread
 import time
-from tb_logger import TbLogger
+from lib.tb_logger import TbLogger
 
 class TBGatewayService:
     def __init__(self, config_file=None):
