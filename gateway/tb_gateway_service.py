@@ -1,6 +1,7 @@
 import network
 import ujson as json
 from lib.tb_upy_sdk.tb_device_mqtt import TBDeviceMqttClient
+from connectors.mqtt.mqtt_connector import MQTTConnector
 import _thread
 import time
 from tb_utility.tb_logger import TbLogger
@@ -35,6 +36,15 @@ class TBGatewayService:
         self.tb_client.set_callback(self.on_message)
         self.tb_client.connect()
         self.logger.info("Connected to ThingsBoard")
+
+        # Initialize MQTT connector for local broker
+        self.mqtt_connector = MQTTConnector("/config/mqtt.json")
+        self.mqtt_connector.connect()
+        self.logger.info("Initialized and connected MQTTConnector")
+
+        # Start MQTT connector loop
+        _thread.start_new_thread(self.mqtt_connector.loop, ())
+        self.logger.info("Started MQTTConnector loop")
 
         # Start main loop
         _thread.start_new_thread(self.main_loop, ())

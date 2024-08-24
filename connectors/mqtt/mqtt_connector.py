@@ -2,6 +2,7 @@ import ujson as json
 from connectors.connector import Connector
 from lib.tb_upy_sdk.umqtt import MQTTClient, MQTTException
 from tb_utility.tb_logger import TbLogger
+import time
 
 class MQTTConnector(Connector):
     def __init__(self, config_path):
@@ -24,5 +25,17 @@ class MQTTConnector(Connector):
         with open(file_path, 'r') as file:
             return json.load(file)
 
+    def connect(self):
+        try:
+            self.client.connect()
+            self.logger.info("Connected to MQTT Broker")
+        except MQTTException as e:
+            self.logger.error(f"Connection to MQTT Broker failed: {e}")    
+
     def on_message(self, topic, msg):
         self.logger.info(f"Received message on topic {topic}: {msg}")
+
+    def loop(self):
+        while True:
+            self.client.check_msg()
+            time.sleep(1)
