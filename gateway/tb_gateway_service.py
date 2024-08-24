@@ -55,23 +55,10 @@ class TBGatewayService:
     def on_message(self, topic, msg):
         self.logger.info(f"Received message: {topic} {msg}")
 
-    def send_telemetry(self, data):
-        self.tb_client.send_telemetry(data)
-        self.logger.info(f"Sent telemetry data: {data}")
 
     def main_loop(self):
         while not self.stopped:
-            # Example telemetry data
-            telemetry_data = {
-                "temperature": 27.6,
-                "humidity": 70
-            }
-            self.send_telemetry(telemetry_data)
-            
-            self.logger.info("Waiting for message...")
-            self.tb_client.wait_for_msg()
-            self.logger.info("Message received or timeout occurred")
-            time.sleep(10)  # Send telemetry data every 10 seconds
+            time.sleep(1)
 
     def stop(self):
         self.stopped = True
