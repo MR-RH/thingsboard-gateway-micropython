@@ -42,6 +42,24 @@ class MQTTConnector(Connector):
             "attributeUpdates": ['deviceNameFilter', 'attributeFilter', 'topicExpression', 'valueExpression']
         }
 
+        # Mappings, i.e., telemetry/attributes-push handlers provided by user via configuration file
+        self.load_handlers('dataMapping', mandatory_keys['dataMapping'], self.__mapping)
+
+        # RPCs, i.e., remote procedure calls (ThingsBoard towards devices) handlers
+        self.load_handlers('serverSideRpc', mandatory_keys['serverSideRpc'], self.__server_side_rpc)
+
+        # Connect requests, i.e., telling ThingsBoard that a device is online even if it does not post telemetry
+        self.load_handlers('connectRequests', mandatory_keys['connectRequests'], self.__connect_requests)
+
+        # Disconnect requests, i.e., telling ThingsBoard that a device is offline even if keep-alive has not expired yet
+        self.load_handlers('disconnectRequests', mandatory_keys['disconnectRequests'], self.__disconnect_requests)
+
+        # Shared attributes direct requests, i.e., asking ThingsBoard for some shared attribute value
+        self.load_handlers('attributeRequests', mandatory_keys['attributeRequests'], self.__attribute_requests)
+
+        # Attributes updates requests, i.e., asking ThingsBoard to send updates about an attribute
+        self.load_handlers('attributeUpdates', mandatory_keys['attributeUpdates'], self.__attribute_updates)
+
         self.client = MQTTClient(
             client_id=self.__broker['clientId'],
             server=self.__broker['host'],
