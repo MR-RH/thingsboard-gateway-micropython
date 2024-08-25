@@ -85,3 +85,26 @@ class TBUtility:
             full_value = expression if expression_instead_none else None
         
         return full_value
+    
+    @staticmethod
+    def extract_expressions(expression):
+        expression_arr = []
+        start = 0
+        while True:
+            start = expression.find('${', start)
+            if start == -1:
+                break
+            end = expression.find('}', start)
+            if end == -1:
+                break
+            expression_arr.append(expression[start:end+1])
+            start = end + 1
+        return expression_arr
+
+    @staticmethod
+    def get_values(expression, body=None, value_type="string", get_tag=False, expression_instead_none=False):
+        expression_arr = TBUtility.extract_expressions(expression)
+        values = [TBUtility.get_value(exp, body, value_type=value_type, get_tag=get_tag, expression_instead_none=expression_instead_none) for exp in expression_arr]
+        if '${' not in expression:
+            values.append(expression)
+        return values
