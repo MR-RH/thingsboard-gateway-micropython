@@ -1,5 +1,6 @@
 from ujson import dumps, loads
 from re import search
+import time
 
 from tb_utility.tb_logger import TbLogger
 
@@ -142,3 +143,21 @@ class TBUtility:
                 return str(evaluated_data)
         except ValueError:
             return str(evaluated_data)
+    
+    # Service methods
+    @staticmethod
+    def get_or_create_connector_id(connector_conf):
+        def generate_uuid():
+            timestamp = int(time.time() * 1000)
+            return f"uuid-{timestamp}"
+
+        connector_id = generate_uuid()
+        if isinstance(connector_conf, dict):
+            if connector_conf.get('id') is not None:
+                connector_id = connector_conf['id']
+        elif isinstance(connector_conf, str):
+            start_find = connector_conf.find("{id_var_start}")
+            end_find = connector_conf.find("{id_var_end}")
+            if start_find > -1 and end_find > -1:
+                connector_id = connector_conf[start_find + len("{id_var_start}"):end_find]
+        return connector_id
