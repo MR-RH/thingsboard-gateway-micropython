@@ -46,3 +46,10 @@ class TBUtility:
             return False
         return True
     
+    @staticmethod
+    def topic_to_regex(topic):
+        return topic.replace("+", "[^/]+").replace("#", ".+").replace('$', '\\$')
+
+    @staticmethod
+    def regex_to_topic(regex):
+        return regex.replace("[^/]+", "+").replace(".+", "#").replace('\\$', '$')
