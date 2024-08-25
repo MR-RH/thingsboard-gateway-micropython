@@ -49,7 +49,7 @@ class TBGatewayService:
         self.logger.info("Initialized and connected MQTTConnector")
 
         # Start MQTT connector loop
-        _thread.start_new_thread(self.mqtt_connector.loop, ())
+        self.__connect_with_connectors()
         self.logger.info("Started MQTTConnector loop")
 
         # Start main loop
@@ -72,12 +72,31 @@ class TBGatewayService:
             pass
         self.logger.info(f'Network config: {wlan.ifconfig()}')
 
+    def __connect_with_connectors (self):
+        connector_name = self.connectors_configs["mqtt"][0]["name"]
+        connector_id = self.connectors_configs["mqtt"][0]["id"]
+
+        available_connector = self.available_connectors_by_id.get(connector_id)
+
+        if available_connector is None or available_connector.is_stopped():
+            connector = MQTTConnector(self,
+                                     self.connectors_configs["mqtt"][0]["config"])
+                                                                        
+            connector.name = connector_name
+            self.available_connectors_by_id[connector_id] = connector
+            self.available_connectors_by_name[connector_name] = connector
+            connector.open()
+        else:
+            self.logger.warning("[%r] Connector with name %s already exists and not stopped!",
+                        connector_id, connector_name)
+
     def on_message(self, topic, msg):
         self.logger.info(f"Received message: {topic} {msg}")
 
 
     def main_loop(self):
         while not self.stopped:
+            print("inside main loop")
             time.sleep(1)
 
     def stop(self):
