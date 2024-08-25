@@ -1,4 +1,5 @@
 import ujson as json
+import _thread
 from connectors.connector import Connector
 from lib.tb_upy_sdk.umqtt import MQTTClient, MQTTException
 from tb_utility.tb_logger import TbLogger
@@ -60,7 +61,7 @@ class MQTTConnector(Connector):
         # Attributes updates requests, i.e., asking ThingsBoard to send updates about an attribute
         self.load_handlers('attributeUpdates', mandatory_keys['attributeUpdates'], self.__attribute_updates)
 
-        self.client = MQTTClient(
+        self._client = MQTTClient(
             client_id=self.__broker['clientId'],
             server=self.__broker['host'],
             port=self.__broker.get('port', 1883),
@@ -68,8 +69,10 @@ class MQTTConnector(Connector):
             password=self.__broker['security'].get('password'),
             keepalive=self.__broker.get('keepalive', 120)
         )
-        self.client.set_callback(self.on_message)
+        self._client.set_callback(self.on_message)
         self.logger.info("MQTTConnector initialized with config from {}".format(config_path))
+
+        self.__stopped = False
 
     @staticmethod
     def load_config(file_path):
@@ -118,9 +121,19 @@ class MQTTConnector(Connector):
                              handler_flavor,
                              len(handler_configuration) - len(accepted_handlers_list)))
 
+    def close(self):
+        self.__stopped = True
+        try:
+            self._client.disconnect()
+        except Exception as e:
+            self.logger.exception(e)
+        # TODO: stop all threads and other cleanup
+        self.logger.info('%s has been stopped.', self.get_name())
+        del self.logger
+
     def connect(self):
         try:
-            self.client.connect()
+            self._client.connect()
             self.logger.info("Connected to MQTT Broker")
         except MQTTException as e:
             self.logger.error(f"Connection to MQTT Broker failed: {e}")    
@@ -130,5 +143,5 @@ class MQTTConnector(Connector):
 
     def loop(self):
         while True:
-            self.client.check_msg()
+            self._client.check_msg()
             time.sleep(1)
