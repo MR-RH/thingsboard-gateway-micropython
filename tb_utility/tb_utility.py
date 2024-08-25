@@ -1,4 +1,5 @@
 from ujson import dumps, loads
+from re import search
 
 from tb_utility.tb_logger import TbLogger
 
@@ -53,3 +54,34 @@ class TBUtility:
     @staticmethod
     def regex_to_topic(regex):
         return regex.replace("[^/]+", "+").replace(".+", "#").replace('\\$', '$')
+
+    @staticmethod
+    def get_value(expression, body=None, value_type="string", get_tag=False, expression_instead_none=False):
+        if isinstance(body, str):
+            body = loads(body)
+        if not expression:
+            return ''
+        
+        # Extract the expression inside ${...}
+        match = search(r'\${(.*?)}', expression)
+        if not match:
+            return expression if expression_instead_none else None
+        
+        target_str = match.group(1)
+        if get_tag:
+            return target_str
+        
+        try:
+            keys = target_str.split('.')
+            full_value = body
+            for key in keys:
+                if '[' in key and ']' in key:
+                    key, index = key[:-1].split('[')
+                    full_value = full_value[key][int(index)]
+                else:
+                    full_value = full_value[key]
+        except (KeyError, IndexError, TypeError) as e:
+            print(e)
+            full_value = expression if expression_instead_none else None
+        
+        return full_value
