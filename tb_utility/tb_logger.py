@@ -11,6 +11,12 @@ class TbLogger:
     def info(self, message):
         self.log("INFO", message)
 
+    def warning(self, message):
+        self.log("WARNING", message)
+
+    def exception(self, message):
+        self.log("EXCEPTION", message)
+
     def error(self, message):
         self.log("ERROR", message)
 
