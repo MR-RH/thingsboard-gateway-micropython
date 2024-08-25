@@ -108,6 +108,16 @@ class TBUtility:
         if '${' not in expression:
             values.append(expression)
         return values
+    
+    @staticmethod
+    def replace_params_tags(text, data):
+        if '${' in text:
+            for item in text.split('/'):
+                if '${' in item:
+                    tag = '${' + TBUtility.get_value(item, data['data'], 'params', get_tag=True) + '}'
+                    value = TBUtility.get_value(item, data['data'], 'params', expression_instead_none=True)
+                    text = text.replace(tag, str(value))
+        return text
 
     @staticmethod
     def get_dict_key_by_value(dictionary: dict, value):
