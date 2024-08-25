@@ -73,6 +73,7 @@ class MQTTConnector(Connector):
         self.logger.info("MQTTConnector initialized with config from {}".format(config_path))
 
         self.__stopped = False
+        self._connected = False
 
     @staticmethod
     def load_config(file_path):
@@ -121,6 +122,37 @@ class MQTTConnector(Connector):
                              handler_flavor,
                              len(handler_configuration) - len(accepted_handlers_list)))
 
+    def open(self):
+        self.__stopped = False
+        _thread.start_new_thread(self.run, ())
+    
+    def run(self):
+        try:
+            self.__connect()
+        except Exception as e:
+            self.logger.exception(e)
+            try:
+                self.close()
+            except Exception as e:
+                self.logger.exception(e)
+
+        while True:
+            if self.__stopped:
+                break
+            elif not self._connected:
+                self.__connect()
+            time.sleep(.2)
+    
+    def __connect(self):
+        while not self._connected and not self.__stopped:
+            try:
+                self.connect()
+                self._connected = True
+                if not self._connected:
+                    time.sleep(1)
+            except Exception as e:
+                self.logger.error(e)
+                time.sleep(10)
     def close(self):
         self.__stopped = True
         try:
