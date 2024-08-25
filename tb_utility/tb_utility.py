@@ -112,3 +112,23 @@ class TBUtility:
     @staticmethod
     def get_dict_key_by_value(dictionary: dict, value):
         return list(dictionary.keys())[list(dictionary.values()).index(value)]
+    
+    @staticmethod
+    def convert_data_type(data, new_type, use_eval=False):
+        current_type = type(data)
+        # use 'in' check instead of equality for such case like 'str' and 'string'
+        new_type = new_type.lower()
+        if current_type.__name__ in new_type:
+            return data
+        evaluated_data = eval(data, globals(), {}) if use_eval else data
+        try:
+            if 'int' in new_type or 'long' in new_type:
+                return int(float(evaluated_data))
+            elif 'float' == new_type or 'double' == new_type:
+                return float(evaluated_data)
+            elif 'bool' in new_type:
+                return evaluated_data.lower() in ['true', '1', 't', 'y', 'yes']
+            else:
+                return str(evaluated_data)
+        except ValueError:
+            return str(evaluated_data)
