@@ -108,3 +108,7 @@ class TBUtility:
         if '${' not in expression:
             values.append(expression)
         return values
+
+    @staticmethod
+    def get_dict_key_by_value(dictionary: dict, value):
+        return list(dictionary.keys())[list(dictionary.values()).index(value)]
