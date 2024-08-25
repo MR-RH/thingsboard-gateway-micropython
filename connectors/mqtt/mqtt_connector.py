@@ -57,6 +57,48 @@ class MQTTConnector(Connector):
     def load_config(file_path):
         with open(file_path, 'r') as file:
             return json.load(file)
+        
+    def load_handlers(self, handler_flavor, mandatory_keys, accepted_handlers_list):
+        handler_configuration = self.config.get(handler_flavor)
+        if handler_configuration is None:
+            request_mapping_config = self.config.get("requestsMapping", {})
+            if isinstance(request_mapping_config, list):
+                handler_configuration = []
+                for request_mapping in request_mapping_config:
+                    if request_mapping.get("requestType") == handler_flavor:
+                        handler_configuration.append(request_mapping.get("requestValue"))
+
+        if not handler_configuration:
+            self.logger.debug("'{}' section missing from configuration".format(handler_flavor))
+        else:
+            for handler in handler_configuration:
+                discard = False
+
+                for key in mandatory_keys:
+                    if key not in handler:
+                        # Will report all missing fields to user before discarding the entry => no break here
+                        discard = True
+                        self.logger.error("Mandatory key '{}' missing from {} handler: {}".format(
+                                         key, handler_flavor, json.dumps(handler)))
+                    else:
+                        self.logger.debug("Mandatory key '{}' found in {} handler: {}".format(
+                                         key, handler_flavor, json.dumps(handler)))
+
+                if discard:
+                    self.logger.warning("{} handler is missing some mandatory keys => rejected: {}".format(
+                                       handler_flavor, json.dumps(handler)))
+                else:
+                    accepted_handlers_list.append(handler)
+                    self.logger.debug("{} handler has all mandatory keys => accepted: {}".format(
+                                     handler_flavor, json.dumps(handler)))
+
+            self.logger.info("Number of accepted {} handlers: {}".format(
+                            handler_flavor,
+                            len(accepted_handlers_list)))
+
+            self.logger.debug("Number of rejected {} handlers: {}".format(
+                             handler_flavor,
+                             len(handler_configuration) - len(accepted_handlers_list)))
 
     def connect(self):
         try:

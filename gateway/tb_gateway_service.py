@@ -38,7 +38,7 @@ class TBGatewayService:
         self.logger.info("Connected to ThingsBoard")
 
         # Initialize MQTT connector for local broker
-        self.mqtt_connector = MQTTConnector("/config/mqtt.json")
+        self.mqtt_connector = MQTTConnector(self, "/config/mqtt.json")
         self.mqtt_connector.connect()
         self.logger.info("Initialized and connected MQTTConnector")
 
