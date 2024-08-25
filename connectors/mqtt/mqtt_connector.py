@@ -1,5 +1,6 @@
 import ujson as json
 import _thread
+import re
 from connectors.connector import Connector
 from lib.tb_upy_sdk.umqtt import MQTTClient, MQTTException
 from tb_utility.tb_logger import TbLogger
@@ -141,6 +142,7 @@ class MQTTConnector(Connector):
                 break
             elif not self._connected:
                 self.__connect()
+            self._client.check_msg()
             time.sleep(.2)
     
     def __connect(self):
@@ -153,6 +155,8 @@ class MQTTConnector(Connector):
             except Exception as e:
                 self.logger.error(e)
                 time.sleep(10)
+        self.subscribe_to_topics()
+
     def close(self):
         self.__stopped = True
         try:
@@ -177,3 +181,35 @@ class MQTTConnector(Connector):
         while True:
             self._client.check_msg()
             time.sleep(1)
+
+    def subscribe_to_topics(self):
+        topics = set()
+        for handler in self.__mapping:
+            topics.add(handler['topicFilter'])
+        for handler in self.__server_side_rpc:
+            topics.add(handler['requestTopicExpression'])
+        for handler in self.__connect_requests:
+            topics.add(handler['topicFilter'])
+        for handler in self.__disconnect_requests:
+            topics.add(handler['topicFilter'])
+        for handler in self.__attribute_requests:
+            topics.add(handler['topicFilter'])
+        for handler in self.__attribute_updates:
+            topics.add(handler['topicExpression'])
+
+        for topic in topics:
+            try:
+                corrected_topic = self.replace_pattern(topic,"+")
+                self._client.subscribe(corrected_topic)
+                self.logger.info(f"Subscribed to topic: {corrected_topic}")
+            except MQTTException as e:
+                self.logger.error(f"Failed to subscribe to topic {corrected_topic}: {e}")
+            except Exception as e:
+                self.logger.error(f"Unexpected error while subscribing to topic {corrected_topic}: {e}")
+    @staticmethod
+    def replace_pattern(input_string, replacement):
+        # Define the pattern to match ${} with anything inside {}
+        pattern = r'\$\{[^}]+\}'
+        # Replace all occurrences of the pattern with the replacement string
+        result = re.sub(pattern, replacement, input_string)
+        return result
