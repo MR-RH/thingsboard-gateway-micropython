@@ -8,6 +8,7 @@ from tb_utility.tb_logger import TbLogger
 
 class TBGatewayService:
     def __init__(self, config_file=None):
+        self.__init_variables()
         self.logger = TbLogger("TBGatewayService")
         self.stopped = False
         self.__lock = _thread.allocate_lock()
@@ -21,6 +22,11 @@ class TBGatewayService:
 
         self.__config = self.__load_general_config(config_file)
         self.logger.info("Got self.__config")
+
+        self.connectors_configs = {"mqtt": []}
+        self.connectors_configs["mqtt"].append({"name": "MYMQTT",
+                                                "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                                                "config": "/config/mqtt.json"})
 
         # Connect to WiFi
         self.__connect_wifi("___ssid___", "___password___")
@@ -49,6 +55,10 @@ class TBGatewayService:
         # Start main loop
         _thread.start_new_thread(self.main_loop, ())
         self.logger.info("Started main loop")
+    
+    def __init_variables(self):
+        self.available_connectors_by_name = {}
+        self.available_connectors_by_id = {}
 
     def __load_general_config(self, config_file):
         with open(config_file, 'r') as f:
