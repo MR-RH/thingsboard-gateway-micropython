@@ -1,8 +1,9 @@
 import time
 from json import dumps
 
+from connectors.mqtt.mqtt_uplink_converter import MqttUplinkConverter
 
-class BytesMqttUplinkConverter:
+class BytesMqttUplinkConverter(MqttUplinkConverter):
     
     def __init__(self, config, logger):
         self.__config = config
