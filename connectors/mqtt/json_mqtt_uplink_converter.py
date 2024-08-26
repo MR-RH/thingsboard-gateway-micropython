@@ -23,6 +23,14 @@ class JSONMqttUplinkConverter(MqttUplinkConverter):
     def config(self, value):
         self.__config = value
         
+    def parse_device_name(self, topic, data, config):
+        return self.parse_device_info(
+            topic, data, config, "deviceNameExpressionSource", "deviceNameExpression")
+
+    def parse_device_type(self, topic, data, config):
+        return self.parse_device_info(
+            topic, data, config, "deviceProfileExpressionSource", "deviceProfileExpression")
+
     def parse_device_info(self, topic, data, config, expression_source, expression):
         result = None
         device_info = config.get('deviceInfo', {})
