@@ -52,5 +52,11 @@
       "keepAliveTimeMs": 10000,
       "keepAliveTimeoutMs": 5000
     },
-    "connectors": []
+    "connectors": [
+      {
+        "type": "mqtt",
+        "name": "MQTT Broker Connector",
+        "configuration": "mqtt.json"
+      }
+    ]
   }
