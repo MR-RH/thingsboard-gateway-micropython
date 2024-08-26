@@ -70,8 +70,13 @@ class MQTTConnector(Connector):
             password=self.__broker['security'].get('password'),
             keepalive=self.__broker.get('keepalive', 120)
         )
+
+        self.name = config.get("name", self.__broker.get(
+            "name",
+            'Mqtt Broker ' + ''.join(random.choice("1234567890qweertyuiopasdsfgfhjklzxcxvbnm") for _ in range(5))))
+        
         self._client.set_callback(self.on_message)
-        self.logger.info("MQTTConnector initialized with config from {}".format(config_path))
+        self.logger.info("MQTTConnector initialized successfully")
 
         self.__stopped = False
         self._connected = False
@@ -123,6 +128,12 @@ class MQTTConnector(Connector):
                              handler_flavor,
                              len(handler_configuration) - len(accepted_handlers_list)))
 
+    def is_connected(self):
+        return self._connected
+
+    def is_stopped(self):
+        return self.__stopped
+    
     def open(self):
         self.__stopped = False
         _thread.start_new_thread(self.run, ())
