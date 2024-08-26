@@ -23,6 +23,11 @@ class JSONMqttUplinkConverter(MqttUplinkConverter):
     def config(self, value):
         self.__config = value
         
+    @staticmethod
+    def create_timeseries_record(key, value, timestamp):
+        value_item = {key: value}
+        return {"ts": timestamp, 'values': value_item} if timestamp else value_item
+            
     def parse_device_name(self, topic, data, config):
         return self.parse_device_info(
             topic, data, config, "deviceNameExpressionSource", "deviceNameExpression")
