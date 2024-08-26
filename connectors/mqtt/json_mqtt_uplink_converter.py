@@ -23,6 +23,58 @@ class JSONMqttUplinkConverter(MqttUplinkConverter):
     def config(self, value):
         self.__config = value
         
+    def _convert_single_item(self, topic, data):
+        datatypes = {"attributes": "attributes",
+                     "timeseries": "telemetry"}
+        dict_result = {
+            "deviceName": self.parse_device_name(topic, data, self.__config),
+            "deviceType": self.parse_device_type(topic, data, self.__config),
+            "attributes": [],
+            "telemetry": []
+        }
+
+        if isinstance(self.__send_data_on_change, bool):
+            dict_result[SEND_ON_CHANGE_PARAMETER] = self.__send_data_on_change
+
+        try:
+            for datatype in datatypes:
+                timestamp = data.get("ts", data.get("timestamp")) if datatype == 'timeseries' else None
+                dict_result[datatypes[datatype]] = []
+                for datatype_config in self.__config.get(datatype, []):
+                    if isinstance(datatype_config, str) and datatype_config == "*":
+                        for item in data:
+                            dict_result[datatypes[datatype]].append(
+                                self.create_timeseries_record(item, data[item], timestamp))
+                    else:
+                        values = TBUtility.get_values(datatype_config["value"], data, datatype_config["type"],
+                                                      expression_instead_none=False)
+                        values_tags = TBUtility.get_values(datatype_config["value"], data, datatype_config["type"],
+                                                           get_tag=True)
+
+                        keys = TBUtility.get_values(datatype_config["key"], data, datatype_config["type"],
+                                                    expression_instead_none=False)
+                        keys_tags = TBUtility.get_values(datatype_config["key"], data, get_tag=True)
+
+                        full_key = datatype_config["key"]
+                        for (key, key_tag) in zip(keys, keys_tags):
+                            is_valid_key = "${" in datatype_config["key"] and "}" in datatype_config["key"]
+                            full_key = full_key.replace('${' + str(key_tag) + '}', str(key)) if is_valid_key else key_tag
+
+                        full_value = datatype_config["value"]
+                        for (value, value_tag) in zip(values, values_tags):
+                            is_valid_value = "${" in datatype_config["value"] and "}" in datatype_config["value"]
+                            full_value = full_value.replace('${' + str(value_tag) + '}', str(value)) if is_valid_value else value
+
+                        if full_key != 'None' and full_value != 'None':
+                            dict_result[datatypes[datatype]].append(
+                                self.create_timeseries_record(full_key, TBUtility.convert_data_type(
+                                    full_value, datatype_config["type"], self.__use_eval), timestamp))
+        except Exception as e:
+            self.logger.error('Error in converter, for config: \n%s\n and message: \n%s\n %s', dumps(self.__config),
+                            str(data), e)
+        self.logger.debug(dict_result)
+        return dict_result
+        
     @staticmethod
     def create_timeseries_record(key, value, timestamp):
         value_item = {key: value}
