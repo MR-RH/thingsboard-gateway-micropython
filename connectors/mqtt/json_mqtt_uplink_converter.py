@@ -23,6 +23,16 @@ class JSONMqttUplinkConverter(MqttUplinkConverter):
     def config(self, value):
         self.__config = value
         
+    def convert(self, topic, data):
+        if isinstance(data, list):
+            converted_data = []
+            for item in data:
+                converted_data.append(self._convert_single_item(topic, item))
+            self.logger.debug(converted_data)
+            return converted_data
+        else:
+            return self._convert_single_item(topic, data)    
+    
     def _convert_single_item(self, topic, data):
         datatypes = {"attributes": "attributes",
                      "timeseries": "telemetry"}
