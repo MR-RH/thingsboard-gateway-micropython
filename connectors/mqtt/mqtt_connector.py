@@ -1,3 +1,4 @@
+import random
 import ujson as json
 import _thread
 import re
@@ -6,16 +7,25 @@ from lib.tb_upy_sdk.umqtt import MQTTClient, MQTTException
 from tb_utility.tb_logger import TbLogger
 from gateway.constants import SEND_ON_CHANGE_PARAMETER, DEFAULT_SEND_ON_CHANGE_VALUE, \
                             SEND_ON_CHANGE_TTL_PARAMETER, DEFAULT_SEND_ON_CHANGE_INFINITE_TTL_VALUE
+from connectors.backward_compatibility_adapter import BackwardCompatibilityAdapter
 
 import time
 
 class MQTTConnector(Connector):
-    def __init__(self, gateway, config_path):
+    def __init__(self, gateway, config):
         self.logger = TbLogger("MQTTConnector")
-        self.config = self.load_config(config_path)
 
         self.__gateway = gateway  # Reference to TB Gateway
         self._connector_type = "mqtt"
+
+        # check if the configuration is in the old format
+        using_old_config_format_detected = BackwardCompatibilityAdapter.is_old_config_format(config)
+        if using_old_config_format_detected:
+            self.config = BackwardCompatibilityAdapter(config).convert()
+            self.__id = self.config.get('id')
+        else:
+            self.config = config
+            self.__id = self.config.get('id')
 
         # Extract main sections from configuration ---------------------------------------------------------------------
         self.__broker = self.config.get('broker')
